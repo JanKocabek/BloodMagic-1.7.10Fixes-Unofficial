@@ -25,37 +25,49 @@ public class NEIBloodOrbShapedHandler extends ShapedRecipeHandler {
         }
 
         @Override
-        public void setIngredients(int width, int height, Object[] items) {
-            for (int x = 0; x < width; x++) {
-                for (int y = 0; y < height; y++) {
-                    if (items[y * width + x] == null)
-                        continue;
 
-                    Object o = items[y * width + x];
-                    if (o instanceof ItemStack) {
-                        PositionedStack stack = new PositionedStack(items[y * width + x], 25 + x * 18, 6 + y * 18, false);
-                        stack.setMaxSize(1);
-                        ingredients.add(stack);
-                    } else if (o instanceof Integer) {
-                        ArrayList<ItemStack> orbs = new ArrayList<ItemStack>();
-                        for (Item item : NEIConfig.bloodOrbs) {
-                            if (((IBloodOrb) item).getOrbLevel() >= (Integer) o) {
-                                orbs.add(new ItemStack(item));
-                            }
-                        }
-                        if (!orbs.isEmpty()) {
-                            PositionedStack stack = new PositionedStack(orbs, 25 + x * 18, 6 + y * 18, false);
-                            stack.setMaxSize(1);
-                            ingredients.add(stack);
-                        }
-                    } else if (o instanceof List) {
-                        PositionedStack stack = new PositionedStack(o, 25 + x * 18, 6 + y * 18, false);
-                        stack.setMaxSize(1);
-                        ingredients.add(stack);
-                    }
+        public void setIngredients(int width, int height, Object[] items) {
+            for (int i = 0; i < Math.min(width * height, items.length); i++) {
+                Object ingredient = prepareIngredient(items[i]);
+                if (ingredient != null) {
+                    final int x = i % width;
+                    final int y = i / width;
+                    ingredients.add(createPositionedStack(ingredient, x, y));
                 }
             }
         }
+
+        private Object prepareIngredient(Object item) {
+            Object ingredient = null;
+            if (item instanceof Integer) {
+                ingredient = getValidBloodOrbs((Integer) item);
+            } else if (item instanceof ItemStack || item instanceof List) {
+                ingredient = item;
+            }
+            return ingredient;
+
+        }
+
+        private PositionedStack createPositionedStack(Object ingredient, int x, int y) {
+            final int relX = 25 + x * 18;
+            final int relY = 6 + y * 18;
+            PositionedStack positionedStack = new PositionedStack(ingredient, relX, relY, false);
+            positionedStack.setMaxSize(1);
+            return positionedStack;
+
+        }
+
+
+        private ArrayList<ItemStack> getValidBloodOrbs(int minLevel) {
+            ArrayList<ItemStack> orbs = new ArrayList<>();
+            for (Item item : NEIConfig.bloodOrbs) {
+                if (((IBloodOrb) item).getOrbLevel() >= minLevel) {
+                    orbs.add(new ItemStack(item));
+                }
+            }
+            return orbs.isEmpty() ? null : orbs;
+        }
+
     }
 
     @Override
@@ -133,7 +145,6 @@ public class NEIBloodOrbShapedHandler extends ShapedRecipeHandler {
     public void loadTransferRects() {
         transferRects.add(new RecipeTransferRect(new Rectangle(84, 23, 24, 18), "crafting"));
     }
-
 
     @Override
     public String getRecipeName() {
