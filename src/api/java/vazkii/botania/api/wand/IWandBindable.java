@@ -3,9 +3,8 @@
  * part of the Botania Mod. Get the Source Code in github:
  * https://github.com/Vazkii/Botania
  * 
- * Botania is Open Source and distributed under a
- * Creative Commons Attribution-NonCommercial-ShareAlike 3.0 License
- * (http://creativecommons.org/licenses/by-nc-sa/3.0/deed.en_GB)
+ * Botania is Open Source and distributed under the
+ * Botania License: http://botaniamod.net/license.php
  * 
  * File Created @ [Oct 9, 2014, 3:01:58 PM (GMT)]
  */
@@ -13,7 +12,6 @@ package vazkii.botania.api.wand;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.MovingObjectPosition;
 
 /**
  * A TileEntity that implements this can be bound to another block
@@ -21,7 +19,7 @@ import net.minecraft.util.MovingObjectPosition;
  * the displayed bounding box.
  */
 public interface IWandBindable extends ITileBound {
-	
+
 	/**
 	 * Return true if the Wand can select this tile.
 	 */
@@ -29,8 +27,8 @@ public interface IWandBindable extends ITileBound {
 
 	/**
 	 * Call to bind the TileEntity to where the player clicked. Return true to deselect
-	 * the TileEntity for another bind or false case the TileEntity should stay selected.  
+	 * the TileEntity for another bind or false case the TileEntity should stay selected.
 	 */
 	public boolean bindTo(EntityPlayer player, ItemStack wand, int x, int y, int z, int side);
-	
+
 }

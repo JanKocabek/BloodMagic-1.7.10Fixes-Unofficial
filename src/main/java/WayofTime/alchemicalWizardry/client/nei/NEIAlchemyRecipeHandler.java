@@ -41,22 +41,27 @@ public class NEIAlchemyRecipeHandler extends TemplateRecipeHandler {
 
         public CachedAlchemyRecipe(AlchemyRecipe recipe, ItemStack orb) {
             this(recipe);
-            this.orbs = new ArrayList<BloodOrbs>();
+            this.orbs = new ArrayList<>();
             orbs.add(new BloodOrbs(orb));
         }
 
         public CachedAlchemyRecipe(AlchemyRecipe recipe) {
-            List<PositionedStack> inputs = new ArrayList<PositionedStack>();
+            List<PositionedStack> positionedStacks = new ArrayList<>();
             ItemStack[] stacks = recipe.getRecipe();
-            if (stacks.length > 0) inputs.add(new PositionedStack(stacks[0], 76, 3));
-            if (stacks.length > 1) inputs.add(new PositionedStack(stacks[1], 51, 19));
-            if (stacks.length > 2) inputs.add(new PositionedStack(stacks[2], 101, 19));
-            if (stacks.length > 3) inputs.add(new PositionedStack(stacks[3], 64, 47));
-            if (stacks.length > 4) inputs.add(new PositionedStack(stacks[4], 88, 47));
-            this.inputs = inputs;
+            if (stacks.length > 0)
+                positionedStacks.add(new PositionedStack(stacks[0], 76, 3));
+            if (stacks.length > 1)
+                positionedStacks.add(new PositionedStack(stacks[1], 51, 19));
+            if (stacks.length > 2)
+                positionedStacks.add(new PositionedStack(stacks[2], 101, 19));
+            if (stacks.length > 3)
+                positionedStacks.add(new PositionedStack(stacks[3], 64, 47));
+            if (stacks.length > 4)
+                positionedStacks.add(new PositionedStack(stacks[4], 88, 47));
+            this.inputs = positionedStacks;
             this.output = new PositionedStack(recipe.getResult(), 76, 25);
             this.lp = recipe.getAmountNeeded() * 100;
-            this.orbs = new ArrayList<BloodOrbs>();
+            this.orbs = new ArrayList<>();
             for (Item orb : bloodOrbs) {
                 if (((IBloodOrb) orb).getOrbLevel() >= recipe.getOrbLevel()) {
                     orbs.add(new BloodOrbs(new ItemStack(orb)));
@@ -76,16 +81,28 @@ public class NEIAlchemyRecipeHandler extends TemplateRecipeHandler {
 
         @Override
         public PositionedStack getOtherStack() {
-            if (orbs == null || orbs.size() <= 0) return null;
+            if (orbs == null || orbs.isEmpty())
+                return null;
             return orbs.get((cycleticks / 48) % orbs.size()).stack;
         }
     }
 
     @Override
     public TemplateRecipeHandler newInstance() {
-        for (ItemStack item : ItemList.items) {
-            if (item != null && item.getItem() instanceof IBloodOrb) {
-                bloodOrbs.add(item.getItem());
+
+        if (bloodOrbs.isEmpty()) {
+            for (ItemStack item : ItemList.items) {
+                if (item != null && item.getItem() instanceof IBloodOrb) {
+                    bloodOrbs.add(item.getItem());
+                }
+            }
+        }
+        if (bloodOrbs.isEmpty()) {
+            for (Object anItemRegistry : Item.itemRegistry) {
+                Item item = (Item) anItemRegistry;
+                if (item instanceof IBloodOrb) {
+                    bloodOrbs.add(item);
+                }
             }
         }
 
@@ -111,7 +128,8 @@ public class NEIAlchemyRecipeHandler extends TemplateRecipeHandler {
     public void loadCraftingRecipes(String outputId, Object... results) {
         if (outputId.equals("alchemicalwizardry.alchemy") && getClass() == NEIAlchemyRecipeHandler.class) {
             for (AlchemyRecipe recipe : AlchemyRecipeRegistry.recipes) {
-                if (recipe.getResult() != null) arecipes.add(new CachedAlchemyRecipe(recipe));
+                if (recipe.getResult() != null)
+                    arecipes.add(new CachedAlchemyRecipe(recipe));
             }
         } else {
             super.loadCraftingRecipes(outputId, results);
@@ -121,7 +139,8 @@ public class NEIAlchemyRecipeHandler extends TemplateRecipeHandler {
     @Override
     public void loadCraftingRecipes(ItemStack result) {
         for (AlchemyRecipe recipe : AlchemyRecipeRegistry.recipes) {
-            if (recipe == null) continue;
+            if (recipe == null)
+                continue;
             if (NEIServerUtils.areStacksSameTypeCrafting(result, recipe.getResult())) {
                 arecipes.add(new CachedAlchemyRecipe(recipe));
             }
@@ -131,24 +150,39 @@ public class NEIAlchemyRecipeHandler extends TemplateRecipeHandler {
     @Override
     public void loadUsageRecipes(ItemStack ingredient) {
         if (ingredient.getItem() instanceof IBloodOrb) {
-            for (AlchemyRecipe recipe : AlchemyRecipeRegistry.recipes) {
-                if (recipe == null) continue;
-                if (((IBloodOrb) ingredient.getItem()).getOrbLevel() >= recipe.getOrbLevel()) {
-                    arecipes.add(new CachedAlchemyRecipe(recipe, ingredient));
-                }
-            }
+            loadBloodOrbRecipes(ingredient);
         } else {
-            for (AlchemyRecipe recipe : AlchemyRecipeRegistry.recipes) {
-                if (recipe == null) continue;
-                ItemStack[] stacks = recipe.getRecipe();
-                for (ItemStack stack : stacks) {
-                    if (NEIServerUtils.areStacksSameTypeCrafting(stack, ingredient)) {
-                        arecipes.add(new CachedAlchemyRecipe(recipe));
-                        break;
-                    }
-                }
+            loadRegularItemRecipes(ingredient);
+        }
+    }
+
+    private void loadBloodOrbRecipes(ItemStack ingredient) {
+        IBloodOrb bloodOrb = (IBloodOrb) ingredient.getItem();
+        int orbLevel = bloodOrb.getOrbLevel();
+        
+        for (AlchemyRecipe recipe : AlchemyRecipeRegistry.recipes) {
+            if (recipe != null && orbLevel >= recipe.getOrbLevel()) {
+                arecipes.add(new CachedAlchemyRecipe(recipe, ingredient));
             }
         }
+    }
+
+    private void loadRegularItemRecipes(ItemStack ingredient) {
+        for (AlchemyRecipe recipe : AlchemyRecipeRegistry.recipes) {
+            if (recipe != null && containsMatchingIngredient(recipe, ingredient)) {
+                arecipes.add(new CachedAlchemyRecipe(recipe));
+            }
+        }
+    }
+
+    private boolean containsMatchingIngredient(AlchemyRecipe recipe, ItemStack ingredient) {
+        ItemStack[] stacks = recipe.getRecipe();
+        for (ItemStack stack : stacks) {
+            if (NEIServerUtils.areStacksSameTypeCrafting(stack, ingredient)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
@@ -158,11 +192,16 @@ public class NEIAlchemyRecipeHandler extends TemplateRecipeHandler {
     }
 
     public int getLPX(int lp) {
-        if (lp < 10) return 122;
-        else if (lp < 100) return 122;
-        else if (lp < 1000) return 130;
-        else if (lp < 10000) return 127;
-        else if (lp < 100000) return 124;
+        if (lp < 10)
+            return 122;
+        else if (lp < 100)
+            return 122;
+        else if (lp < 1000)
+            return 130;
+        else if (lp < 10000)
+            return 127;
+        else if (lp < 100000)
+            return 124;
         return 122;
     }
 
