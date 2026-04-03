@@ -56,7 +56,7 @@ dependencies {
     compile "codechicken:CodeChickenCore:" + config.mc_version + "-" + config.ccc_version + ":dev"
     compile "codechicken:NotEnoughItems:" + config.mc_version + "-" + config.nei_version + ":dev"
     compile name: 'MineTweaker3', version: config.minetweaker_version, ext: 'jar'
-    compile "codechicken:ForgeMultipart:1.7.10-1.1.0.347:dev"
+    compile "codechicken:ForgeMultipart:1.7.10-1.2.0.347:dev"
     //compile "info.amerifrance.guideapi:Guide-API:" + config.mc_version + "-" + config.guideapi_version + ":deobf"
     compile "curse.maven:chisel-235279:2287445"
 }
