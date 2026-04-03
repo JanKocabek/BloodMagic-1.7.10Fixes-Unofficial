@@ -1,3 +1,5 @@
+#UNOFICIAL fork with fixes for regrowth pack 1.7.10
+
 #Blood Magic: Alchemical Wizardry
 
 ###Gruesome? Probably. Worth it? Definitely!
